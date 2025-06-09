@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Attendance Dashboard</title></head>
+<body>
+<h2>Attendance Dashboard</h2>
+<table border="1">
+    <tr><th>Student Name</th><th>Session ID</th><th>Timestamp</th></tr>
+    {% for name, session_id, timestamp in records %}
+    <tr>
+        <td>{{ name }}</td>
+        <td>{{ session_id }}</td>
+        <td>{{ timestamp }}</td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="/admin-login">Logout</a>
+</body>
+</html>
