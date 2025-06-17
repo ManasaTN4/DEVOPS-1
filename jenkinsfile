@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_CREDENTIALS = credentials('MANASATN')  // ID from Jenkins credentials
+        IMAGE_NAME = 'manasatn4/devops-1-app:latest'
+    }
+
+    stages {
+        stage('Clean workspace') {
+            steps {
+                sh '''
+                    echo "🔁 Cleaning up workspace..."
+                    rm -rf attendance-app college_system DEVOPS-1 ~/.docker/config.json
+                '''
+            }
+        }
+
+        stage('Clone repository') {
+            steps {
+                sh '''
+                    echo "📦 Cloning GitHub repository..."
+                    git clone https://github.com/ManasaTN4/DEVOPS-1.git
+                    cd DEVOPS-1
+                    echo "📂 Repository files:"
+                    ls -la
+                '''
+            }
+        }
+
+        stage('Build Docker image') {
+            steps {
+                dir('DEVOPS-1') {
+                    sh '''
+                        echo "🐳 Building Docker image..."
+                        docker build -t $IMAGE_NAME .
+                    '''
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                sh '''
+                    echo "🔐 Logging in to Docker Hub..."
+                    echo "$DOCKER_CREDENTIALS_PSW" | docker login -u "$DOCKER_CREDENTIALS_USR" --password-stdin
+                '''
+            }
+        }
+
+        stage('Push Docker image') {
+            steps {
+                sh '''
+                    echo "📤 Pushing Docker image to Docker Hub..."
+                    docker push $IMAGE_NAME
+                '''
+            }
+        }
+
+        stage('Done') {
+            steps {
+                echo "✅ Build and push completed successfully!"
+            }
+        }
+    }
+}
