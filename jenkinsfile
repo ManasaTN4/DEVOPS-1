@@ -1,66 +1,30 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'manasatn4/devops-1-app:latest'
-    }
-
     stages {
-        stage('Clean workspace') {
+        stage('Clone') {
             steps {
-                sh '''
-                    echo "🔁 Cleaning up workspace..."
-                    rm -rf DEVOPS-1-app college_system DEVOPS-1 ~/.docker/config.json
-                '''
+                echo '📥 Cloning repository...'
+                checkout scm
             }
         }
 
-        stage('Clone repository') {
+        stage('Build Docker Image') {
             steps {
-                sh '''
-                    echo "📦 Cloning GitHub repository..."
-                    git clone https://github.com/ManasaTN4/DEVOPS-1.git
-                    cd DEVOPS-1
-                    echo "📂 Repository files:"
-                    ls -la
-                '''
+                echo '🐳 Building Docker image...'
+                sh 'docker build -t manasatn4/devops-1-app:latest .'
             }
         }
 
-        stage('Build Docker image') {
+        stage('Login & Push to Docker Hub') {
             steps {
-                dir('DEVOPS-1') {
+                echo '🔐 Logging into Docker Hub & pushing image...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "🐳 Building Docker image..."
-                        docker build -t $IMAGE_NAME .
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push manasatn4/devops-1-app:latest
                     '''
                 }
-            }
-        }
-
-        stage('Login to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'MANASATN', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh '''
-                        echo "🔐 Logging in to Docker Hub..."
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                    '''
-                }
-            }
-        }
-
-        stage('Push Docker image') {
-            steps {
-                sh '''
-                    echo "📤 Pushing Docker image to Docker Hub..."
-                    docker push $IMAGE_NAME
-                '''
-            }
-        }
-
-        stage('Done') {
-            steps {
-                echo "✅ Build and push completed successfully!"
             }
         }
     }
