@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS = credentials('MANASATN')  // ID from Jenkins credentials
         IMAGE_NAME = 'manasatn4/devops-1-app:latest'
     }
 
@@ -11,7 +10,7 @@ pipeline {
             steps {
                 sh '''
                     echo "🔁 Cleaning up workspace..."
-                    rm -rf attendance-app college_system DEVOPS-1 ~/.docker/config.json
+                    rm -rf DEVOPS-1-app college_system DEVOPS-1 ~/.docker/config.json
                 '''
             }
         }
@@ -41,10 +40,12 @@ pipeline {
 
         stage('Login to Docker Hub') {
             steps {
-                sh '''
-                    echo "🔐 Logging in to Docker Hub..."
-                    echo "$DOCKER_CREDENTIALS_PSW" | docker login -u "$DOCKER_CREDENTIALS_USR" --password-stdin
-                '''
+                withCredentials([usernamePassword(credentialsId: 'MANASATN', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh '''
+                        echo "🔐 Logging in to Docker Hub..."
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                    '''
+                }
             }
         }
 
